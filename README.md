@@ -33,3 +33,15 @@ pnpm test:e2e
 - SQLite/Drizzle: immutable run evidence, settlements, and reputation history.
 
 Do not commit `.env.local`, production credentials, or live customer fixtures.
+
+## Foundation safety defaults
+
+`CALLMARKET_TOOL_MODE` defaults to `simulator`. Selecting `live` mode does not by itself authorize mutations: the shared adapter boundary rejects external writes unless `ALLOW_LIVE_TEST_WRITES` is exactly `true`. Live mode is reserved for disposable test resources; reproducible runs must use simulators.
+
+All derived database records retain `scenarioId`, `runId`, and lineage. The initial migration enforces matching run/scenario provenance and rejects provenance updates; frozen holdout scenario rows cannot be changed.
+
+To verify a migration against a new database:
+
+```bash
+DATABASE_URL=file:/tmp/callmarket-clean.db pnpm db:migrate
+```
