@@ -1,7 +1,7 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "870e80af-0d7b-4029-9d43-31965269c2e6",
+  "id": "cd2a00b5-15d9-48fb-b5a1-50ff0e9de951",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "bankroll_events": {
@@ -103,19 +103,6 @@
         }
       },
       "foreignKeys": {
-        "bankroll_events_settlement_id_settlements_settlement_id_fk": {
-          "name": "bankroll_events_settlement_id_settlements_settlement_id_fk",
-          "tableFrom": "bankroll_events",
-          "tableTo": "settlements",
-          "columnsFrom": [
-            "settlement_id"
-          ],
-          "columnsTo": [
-            "settlement_id"
-          ],
-          "onDelete": "restrict",
-          "onUpdate": "restrict"
-        },
         "bankroll_events_run_provenance_fk": {
           "name": "bankroll_events_run_provenance_fk",
           "tableFrom": "bankroll_events",
@@ -125,6 +112,23 @@
             "scenario_id"
           ],
           "columnsTo": [
+            "run_id",
+            "scenario_id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "restrict"
+        },
+        "bankroll_events_settlement_provenance_fk": {
+          "name": "bankroll_events_settlement_provenance_fk",
+          "tableFrom": "bankroll_events",
+          "tableTo": "settlements",
+          "columnsFrom": [
+            "settlement_id",
+            "run_id",
+            "scenario_id"
+          ],
+          "columnsTo": [
+            "settlement_id",
             "run_id",
             "scenario_id"
           ],
@@ -237,19 +241,6 @@
         }
       },
       "foreignKeys": {
-        "benchmark_metrics_benchmark_run_id_benchmark_runs_benchmark_run_id_fk": {
-          "name": "benchmark_metrics_benchmark_run_id_benchmark_runs_benchmark_run_id_fk",
-          "tableFrom": "benchmark_metrics",
-          "tableTo": "benchmark_runs",
-          "columnsFrom": [
-            "benchmark_run_id"
-          ],
-          "columnsTo": [
-            "benchmark_run_id"
-          ],
-          "onDelete": "restrict",
-          "onUpdate": "restrict"
-        },
         "benchmark_metrics_run_provenance_fk": {
           "name": "benchmark_metrics_run_provenance_fk",
           "tableFrom": "benchmark_metrics",
@@ -259,6 +250,23 @@
             "scenario_id"
           ],
           "columnsTo": [
+            "run_id",
+            "scenario_id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "restrict"
+        },
+        "benchmark_metrics_benchmark_run_provenance_fk": {
+          "name": "benchmark_metrics_benchmark_run_provenance_fk",
+          "tableFrom": "benchmark_metrics",
+          "tableTo": "benchmark_runs",
+          "columnsFrom": [
+            "benchmark_run_id",
+            "run_id",
+            "scenario_id"
+          ],
+          "columnsTo": [
+            "benchmark_run_id",
             "run_id",
             "scenario_id"
           ],
@@ -347,6 +355,15 @@
         }
       },
       "indexes": {
+        "benchmark_runs_id_provenance_uidx": {
+          "name": "benchmark_runs_id_provenance_uidx",
+          "columns": [
+            "benchmark_run_id",
+            "run_id",
+            "scenario_id"
+          ],
+          "isUnique": true
+        },
         "benchmark_runs_manifest_condition_idx": {
           "name": "benchmark_runs_manifest_condition_idx",
           "columns": [
@@ -473,6 +490,15 @@
             "bidder_id"
           ],
           "isUnique": true
+        },
+        "bids_id_provenance_uidx": {
+          "name": "bids_id_provenance_uidx",
+          "columns": [
+            "bid_id",
+            "run_id",
+            "scenario_id"
+          ],
+          "isUnique": true
         }
       },
       "foreignKeys": {
@@ -586,19 +612,6 @@
         }
       },
       "foreignKeys": {
-        "contexts_task_id_tasks_task_id_fk": {
-          "name": "contexts_task_id_tasks_task_id_fk",
-          "tableFrom": "contexts",
-          "tableTo": "tasks",
-          "columnsFrom": [
-            "task_id"
-          ],
-          "columnsTo": [
-            "task_id"
-          ],
-          "onDelete": "restrict",
-          "onUpdate": "restrict"
-        },
         "contexts_run_provenance_fk": {
           "name": "contexts_run_provenance_fk",
           "tableFrom": "contexts",
@@ -608,6 +621,23 @@
             "scenario_id"
           ],
           "columnsTo": [
+            "run_id",
+            "scenario_id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "restrict"
+        },
+        "contexts_task_provenance_fk": {
+          "name": "contexts_task_provenance_fk",
+          "tableFrom": "contexts",
+          "tableTo": "tasks",
+          "columnsFrom": [
+            "task_id",
+            "run_id",
+            "scenario_id"
+          ],
+          "columnsTo": [
+            "task_id",
             "run_id",
             "scenario_id"
           ],
@@ -687,6 +717,15 @@
           ],
           "isUnique": true
         },
+        "market_decisions_id_provenance_uidx": {
+          "name": "market_decisions_id_provenance_uidx",
+          "columns": [
+            "decision_id",
+            "run_id",
+            "scenario_id"
+          ],
+          "isUnique": true
+        },
         "market_decisions_selected_bid_idx": {
           "name": "market_decisions_selected_bid_idx",
           "columns": [
@@ -696,19 +735,6 @@
         }
       },
       "foreignKeys": {
-        "market_decisions_selected_bid_id_bids_bid_id_fk": {
-          "name": "market_decisions_selected_bid_id_bids_bid_id_fk",
-          "tableFrom": "market_decisions",
-          "tableTo": "bids",
-          "columnsFrom": [
-            "selected_bid_id"
-          ],
-          "columnsTo": [
-            "bid_id"
-          ],
-          "onDelete": "restrict",
-          "onUpdate": "restrict"
-        },
         "market_decisions_run_provenance_fk": {
           "name": "market_decisions_run_provenance_fk",
           "tableFrom": "market_decisions",
@@ -718,6 +744,23 @@
             "scenario_id"
           ],
           "columnsTo": [
+            "run_id",
+            "scenario_id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "restrict"
+        },
+        "market_decisions_bid_provenance_fk": {
+          "name": "market_decisions_bid_provenance_fk",
+          "tableFrom": "market_decisions",
+          "tableTo": "bids",
+          "columnsFrom": [
+            "selected_bid_id",
+            "run_id",
+            "scenario_id"
+          ],
+          "columnsTo": [
+            "bid_id",
             "run_id",
             "scenario_id"
           ],
@@ -802,13 +845,6 @@
           "notNull": true,
           "autoincrement": false
         },
-        "previous_bucket_id": {
-          "name": "previous_bucket_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
         "created_at": {
           "name": "created_at",
           "type": "integer",
@@ -837,19 +873,6 @@
         }
       },
       "foreignKeys": {
-        "reputation_buckets_settlement_id_settlements_settlement_id_fk": {
-          "name": "reputation_buckets_settlement_id_settlements_settlement_id_fk",
-          "tableFrom": "reputation_buckets",
-          "tableTo": "settlements",
-          "columnsFrom": [
-            "settlement_id"
-          ],
-          "columnsTo": [
-            "settlement_id"
-          ],
-          "onDelete": "restrict",
-          "onUpdate": "restrict"
-        },
         "reputation_buckets_run_provenance_fk": {
           "name": "reputation_buckets_run_provenance_fk",
           "tableFrom": "reputation_buckets",
@@ -859,6 +882,23 @@
             "scenario_id"
           ],
           "columnsTo": [
+            "run_id",
+            "scenario_id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "restrict"
+        },
+        "reputation_buckets_settlement_provenance_fk": {
+          "name": "reputation_buckets_settlement_provenance_fk",
+          "tableFrom": "reputation_buckets",
+          "tableTo": "settlements",
+          "columnsFrom": [
+            "settlement_id",
+            "run_id",
+            "scenario_id"
+          ],
+          "columnsTo": [
+            "settlement_id",
             "run_id",
             "scenario_id"
           ],
@@ -1166,35 +1206,18 @@
             "verification_id"
           ],
           "isUnique": true
+        },
+        "settlements_id_provenance_uidx": {
+          "name": "settlements_id_provenance_uidx",
+          "columns": [
+            "settlement_id",
+            "run_id",
+            "scenario_id"
+          ],
+          "isUnique": true
         }
       },
       "foreignKeys": {
-        "settlements_selected_bid_id_bids_bid_id_fk": {
-          "name": "settlements_selected_bid_id_bids_bid_id_fk",
-          "tableFrom": "settlements",
-          "tableTo": "bids",
-          "columnsFrom": [
-            "selected_bid_id"
-          ],
-          "columnsTo": [
-            "bid_id"
-          ],
-          "onDelete": "restrict",
-          "onUpdate": "restrict"
-        },
-        "settlements_verification_id_verifications_verification_id_fk": {
-          "name": "settlements_verification_id_verifications_verification_id_fk",
-          "tableFrom": "settlements",
-          "tableTo": "verifications",
-          "columnsFrom": [
-            "verification_id"
-          ],
-          "columnsTo": [
-            "verification_id"
-          ],
-          "onDelete": "restrict",
-          "onUpdate": "restrict"
-        },
         "settlements_run_provenance_fk": {
           "name": "settlements_run_provenance_fk",
           "tableFrom": "settlements",
@@ -1204,6 +1227,40 @@
             "scenario_id"
           ],
           "columnsTo": [
+            "run_id",
+            "scenario_id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "restrict"
+        },
+        "settlements_bid_provenance_fk": {
+          "name": "settlements_bid_provenance_fk",
+          "tableFrom": "settlements",
+          "tableTo": "bids",
+          "columnsFrom": [
+            "selected_bid_id",
+            "run_id",
+            "scenario_id"
+          ],
+          "columnsTo": [
+            "bid_id",
+            "run_id",
+            "scenario_id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "restrict"
+        },
+        "settlements_verification_provenance_fk": {
+          "name": "settlements_verification_provenance_fk",
+          "tableFrom": "settlements",
+          "tableTo": "verifications",
+          "columnsFrom": [
+            "verification_id",
+            "run_id",
+            "scenario_id"
+          ],
+          "columnsTo": [
+            "verification_id",
             "run_id",
             "scenario_id"
           ],
@@ -1290,6 +1347,15 @@
           "name": "tasks_run_uidx",
           "columns": [
             "run_id"
+          ],
+          "isUnique": true
+        },
+        "tasks_id_provenance_uidx": {
+          "name": "tasks_id_provenance_uidx",
+          "columns": [
+            "task_id",
+            "run_id",
+            "scenario_id"
           ],
           "isUnique": true
         }
@@ -1424,22 +1490,18 @@
             "decision_id"
           ],
           "isUnique": true
+        },
+        "tool_executions_id_provenance_uidx": {
+          "name": "tool_executions_id_provenance_uidx",
+          "columns": [
+            "execution_id",
+            "run_id",
+            "scenario_id"
+          ],
+          "isUnique": true
         }
       },
       "foreignKeys": {
-        "tool_executions_decision_id_market_decisions_decision_id_fk": {
-          "name": "tool_executions_decision_id_market_decisions_decision_id_fk",
-          "tableFrom": "tool_executions",
-          "tableTo": "market_decisions",
-          "columnsFrom": [
-            "decision_id"
-          ],
-          "columnsTo": [
-            "decision_id"
-          ],
-          "onDelete": "restrict",
-          "onUpdate": "restrict"
-        },
         "tool_executions_run_provenance_fk": {
           "name": "tool_executions_run_provenance_fk",
           "tableFrom": "tool_executions",
@@ -1449,6 +1511,23 @@
             "scenario_id"
           ],
           "columnsTo": [
+            "run_id",
+            "scenario_id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "restrict"
+        },
+        "tool_executions_decision_provenance_fk": {
+          "name": "tool_executions_decision_provenance_fk",
+          "tableFrom": "tool_executions",
+          "tableTo": "market_decisions",
+          "columnsFrom": [
+            "decision_id",
+            "run_id",
+            "scenario_id"
+          ],
+          "columnsTo": [
+            "decision_id",
             "run_id",
             "scenario_id"
           ],
@@ -1546,22 +1625,18 @@
             "execution_id"
           ],
           "isUnique": true
+        },
+        "verifications_id_provenance_uidx": {
+          "name": "verifications_id_provenance_uidx",
+          "columns": [
+            "verification_id",
+            "run_id",
+            "scenario_id"
+          ],
+          "isUnique": true
         }
       },
       "foreignKeys": {
-        "verifications_execution_id_tool_executions_execution_id_fk": {
-          "name": "verifications_execution_id_tool_executions_execution_id_fk",
-          "tableFrom": "verifications",
-          "tableTo": "tool_executions",
-          "columnsFrom": [
-            "execution_id"
-          ],
-          "columnsTo": [
-            "execution_id"
-          ],
-          "onDelete": "restrict",
-          "onUpdate": "restrict"
-        },
         "verifications_run_provenance_fk": {
           "name": "verifications_run_provenance_fk",
           "tableFrom": "verifications",
@@ -1571,6 +1646,23 @@
             "scenario_id"
           ],
           "columnsTo": [
+            "run_id",
+            "scenario_id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "restrict"
+        },
+        "verifications_execution_provenance_fk": {
+          "name": "verifications_execution_provenance_fk",
+          "tableFrom": "verifications",
+          "tableTo": "tool_executions",
+          "columnsFrom": [
+            "execution_id",
+            "run_id",
+            "scenario_id"
+          ],
+          "columnsTo": [
+            "execution_id",
             "run_id",
             "scenario_id"
           ],

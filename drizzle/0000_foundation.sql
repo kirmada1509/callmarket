@@ -10,8 +10,8 @@ CREATE TABLE `bankroll_events` (
 	`delta` real NOT NULL,
 	`balance_after` real NOT NULL,
 	`created_at` integer NOT NULL,
-	FOREIGN KEY (`settlement_id`) REFERENCES `settlements`(`settlement_id`) ON UPDATE restrict ON DELETE restrict,
 	FOREIGN KEY (`run_id`,`scenario_id`) REFERENCES `runs`(`run_id`,`scenario_id`) ON UPDATE restrict ON DELETE restrict,
+	FOREIGN KEY (`settlement_id`,`run_id`,`scenario_id`) REFERENCES `settlements`(`settlement_id`,`run_id`,`scenario_id`) ON UPDATE restrict ON DELETE restrict,
 	CONSTRAINT "bankroll_events_stake_nonnegative" CHECK("bankroll_events"."stake" >= 0),
 	CONSTRAINT "bankroll_events_brier_score_range" CHECK("bankroll_events"."brier_score" >= 0 AND "bankroll_events"."brier_score" <= 1)
 );
@@ -30,8 +30,8 @@ CREATE TABLE `benchmark_metrics` (
 	`confidence_low` real,
 	`confidence_high` real,
 	`calculated_at` integer NOT NULL,
-	FOREIGN KEY (`benchmark_run_id`) REFERENCES `benchmark_runs`(`benchmark_run_id`) ON UPDATE restrict ON DELETE restrict,
 	FOREIGN KEY (`run_id`,`scenario_id`) REFERENCES `runs`(`run_id`,`scenario_id`) ON UPDATE restrict ON DELETE restrict,
+	FOREIGN KEY (`benchmark_run_id`,`run_id`,`scenario_id`) REFERENCES `benchmark_runs`(`benchmark_run_id`,`run_id`,`scenario_id`) ON UPDATE restrict ON DELETE restrict,
 	CONSTRAINT "benchmark_metrics_sample_size_positive" CHECK("benchmark_metrics"."sample_size" > 0),
 	CONSTRAINT "benchmark_metrics_confidence_order" CHECK("benchmark_metrics"."confidence_low" IS NULL OR "benchmark_metrics"."confidence_high" IS NULL OR "benchmark_metrics"."confidence_low" <= "benchmark_metrics"."confidence_high")
 );
@@ -50,6 +50,7 @@ CREATE TABLE `benchmark_runs` (
 	FOREIGN KEY (`run_id`,`scenario_id`) REFERENCES `runs`(`run_id`,`scenario_id`) ON UPDATE restrict ON DELETE restrict
 );
 --> statement-breakpoint
+CREATE UNIQUE INDEX `benchmark_runs_id_provenance_uidx` ON `benchmark_runs` (`benchmark_run_id`,`run_id`,`scenario_id`);--> statement-breakpoint
 CREATE INDEX `benchmark_runs_manifest_condition_idx` ON `benchmark_runs` (`manifest_digest`,`condition`);--> statement-breakpoint
 CREATE TABLE `bids` (
 	`bid_id` text PRIMARY KEY NOT NULL,
@@ -71,6 +72,7 @@ CREATE TABLE `bids` (
 );
 --> statement-breakpoint
 CREATE UNIQUE INDEX `bids_run_bidder_uidx` ON `bids` (`run_id`,`bidder_id`);--> statement-breakpoint
+CREATE UNIQUE INDEX `bids_id_provenance_uidx` ON `bids` (`bid_id`,`run_id`,`scenario_id`);--> statement-breakpoint
 CREATE TABLE `contexts` (
 	`context_id` text PRIMARY KEY NOT NULL,
 	`scenario_id` text NOT NULL,
@@ -80,8 +82,8 @@ CREATE TABLE `contexts` (
 	`payload` text NOT NULL,
 	`deterministic_tags` text NOT NULL,
 	`created_at` integer NOT NULL,
-	FOREIGN KEY (`task_id`) REFERENCES `tasks`(`task_id`) ON UPDATE restrict ON DELETE restrict,
-	FOREIGN KEY (`run_id`,`scenario_id`) REFERENCES `runs`(`run_id`,`scenario_id`) ON UPDATE restrict ON DELETE restrict
+	FOREIGN KEY (`run_id`,`scenario_id`) REFERENCES `runs`(`run_id`,`scenario_id`) ON UPDATE restrict ON DELETE restrict,
+	FOREIGN KEY (`task_id`,`run_id`,`scenario_id`) REFERENCES `tasks`(`task_id`,`run_id`,`scenario_id`) ON UPDATE restrict ON DELETE restrict
 );
 --> statement-breakpoint
 CREATE UNIQUE INDEX `contexts_run_uidx` ON `contexts` (`run_id`);--> statement-breakpoint
@@ -95,11 +97,12 @@ CREATE TABLE `market_decisions` (
 	`risk_policy` text NOT NULL,
 	`score_breakdown` text NOT NULL,
 	`decided_at` integer NOT NULL,
-	FOREIGN KEY (`selected_bid_id`) REFERENCES `bids`(`bid_id`) ON UPDATE restrict ON DELETE restrict,
-	FOREIGN KEY (`run_id`,`scenario_id`) REFERENCES `runs`(`run_id`,`scenario_id`) ON UPDATE restrict ON DELETE restrict
+	FOREIGN KEY (`run_id`,`scenario_id`) REFERENCES `runs`(`run_id`,`scenario_id`) ON UPDATE restrict ON DELETE restrict,
+	FOREIGN KEY (`selected_bid_id`,`run_id`,`scenario_id`) REFERENCES `bids`(`bid_id`,`run_id`,`scenario_id`) ON UPDATE restrict ON DELETE restrict
 );
 --> statement-breakpoint
 CREATE UNIQUE INDEX `market_decisions_run_uidx` ON `market_decisions` (`run_id`);--> statement-breakpoint
+CREATE UNIQUE INDEX `market_decisions_id_provenance_uidx` ON `market_decisions` (`decision_id`,`run_id`,`scenario_id`);--> statement-breakpoint
 CREATE INDEX `market_decisions_selected_bid_idx` ON `market_decisions` (`selected_bid_id`);--> statement-breakpoint
 CREATE TABLE `reputation_buckets` (
 	`reputation_bucket_id` text PRIMARY KEY NOT NULL,
@@ -112,10 +115,9 @@ CREATE TABLE `reputation_buckets` (
 	`bucket_key` text NOT NULL,
 	`score` real NOT NULL,
 	`sample_count` integer NOT NULL,
-	`previous_bucket_id` text,
 	`created_at` integer NOT NULL,
-	FOREIGN KEY (`settlement_id`) REFERENCES `settlements`(`settlement_id`) ON UPDATE restrict ON DELETE restrict,
 	FOREIGN KEY (`run_id`,`scenario_id`) REFERENCES `runs`(`run_id`,`scenario_id`) ON UPDATE restrict ON DELETE restrict,
+	FOREIGN KEY (`settlement_id`,`run_id`,`scenario_id`) REFERENCES `settlements`(`settlement_id`,`run_id`,`scenario_id`) ON UPDATE restrict ON DELETE restrict,
 	CONSTRAINT "reputation_buckets_score_range" CHECK("reputation_buckets"."score" >= 0 AND "reputation_buckets"."score" <= 1),
 	CONSTRAINT "reputation_buckets_samples_positive" CHECK("reputation_buckets"."sample_count" > 0)
 );
@@ -164,9 +166,9 @@ CREATE TABLE `settlements` (
 	`brier_score` real NOT NULL,
 	`utility` real NOT NULL,
 	`settled_at` integer NOT NULL,
-	FOREIGN KEY (`selected_bid_id`) REFERENCES `bids`(`bid_id`) ON UPDATE restrict ON DELETE restrict,
-	FOREIGN KEY (`verification_id`) REFERENCES `verifications`(`verification_id`) ON UPDATE restrict ON DELETE restrict,
 	FOREIGN KEY (`run_id`,`scenario_id`) REFERENCES `runs`(`run_id`,`scenario_id`) ON UPDATE restrict ON DELETE restrict,
+	FOREIGN KEY (`selected_bid_id`,`run_id`,`scenario_id`) REFERENCES `bids`(`bid_id`,`run_id`,`scenario_id`) ON UPDATE restrict ON DELETE restrict,
+	FOREIGN KEY (`verification_id`,`run_id`,`scenario_id`) REFERENCES `verifications`(`verification_id`,`run_id`,`scenario_id`) ON UPDATE restrict ON DELETE restrict,
 	CONSTRAINT "settlements_probability_range" CHECK("settlements"."predicted_probability" >= 0.01 AND "settlements"."predicted_probability" <= 0.99),
 	CONSTRAINT "settlements_binary_outcome" CHECK("settlements"."outcome" IN (0, 1)),
 	CONSTRAINT "settlements_brier_loss_range" CHECK("settlements"."brier_loss" >= 0 AND "settlements"."brier_loss" <= 1),
@@ -175,6 +177,7 @@ CREATE TABLE `settlements` (
 --> statement-breakpoint
 CREATE UNIQUE INDEX `settlements_run_uidx` ON `settlements` (`run_id`);--> statement-breakpoint
 CREATE UNIQUE INDEX `settlements_verification_uidx` ON `settlements` (`verification_id`);--> statement-breakpoint
+CREATE UNIQUE INDEX `settlements_id_provenance_uidx` ON `settlements` (`settlement_id`,`run_id`,`scenario_id`);--> statement-breakpoint
 CREATE TABLE `tasks` (
 	`task_id` text PRIMARY KEY NOT NULL,
 	`scenario_id` text NOT NULL,
@@ -187,6 +190,7 @@ CREATE TABLE `tasks` (
 );
 --> statement-breakpoint
 CREATE UNIQUE INDEX `tasks_run_uidx` ON `tasks` (`run_id`);--> statement-breakpoint
+CREATE UNIQUE INDEX `tasks_id_provenance_uidx` ON `tasks` (`task_id`,`run_id`,`scenario_id`);--> statement-breakpoint
 CREATE TABLE `tool_executions` (
 	`execution_id` text PRIMARY KEY NOT NULL,
 	`scenario_id` text NOT NULL,
@@ -202,12 +206,13 @@ CREATE TABLE `tool_executions` (
 	`latency_ms` integer NOT NULL,
 	`error` text,
 	`executed_at` integer NOT NULL,
-	FOREIGN KEY (`decision_id`) REFERENCES `market_decisions`(`decision_id`) ON UPDATE restrict ON DELETE restrict,
 	FOREIGN KEY (`run_id`,`scenario_id`) REFERENCES `runs`(`run_id`,`scenario_id`) ON UPDATE restrict ON DELETE restrict,
+	FOREIGN KEY (`decision_id`,`run_id`,`scenario_id`) REFERENCES `market_decisions`(`decision_id`,`run_id`,`scenario_id`) ON UPDATE restrict ON DELETE restrict,
 	CONSTRAINT "tool_executions_latency_nonnegative" CHECK("tool_executions"."latency_ms" >= 0)
 );
 --> statement-breakpoint
 CREATE UNIQUE INDEX `tool_executions_decision_uidx` ON `tool_executions` (`decision_id`);--> statement-breakpoint
+CREATE UNIQUE INDEX `tool_executions_id_provenance_uidx` ON `tool_executions` (`execution_id`,`run_id`,`scenario_id`);--> statement-breakpoint
 CREATE TABLE `verifications` (
 	`verification_id` text PRIMARY KEY NOT NULL,
 	`scenario_id` text NOT NULL,
@@ -219,11 +224,12 @@ CREATE TABLE `verifications` (
 	`raw_evidence` text NOT NULL,
 	`policy_violations` text NOT NULL,
 	`verified_at` integer NOT NULL,
-	FOREIGN KEY (`execution_id`) REFERENCES `tool_executions`(`execution_id`) ON UPDATE restrict ON DELETE restrict,
-	FOREIGN KEY (`run_id`,`scenario_id`) REFERENCES `runs`(`run_id`,`scenario_id`) ON UPDATE restrict ON DELETE restrict
+	FOREIGN KEY (`run_id`,`scenario_id`) REFERENCES `runs`(`run_id`,`scenario_id`) ON UPDATE restrict ON DELETE restrict,
+	FOREIGN KEY (`execution_id`,`run_id`,`scenario_id`) REFERENCES `tool_executions`(`execution_id`,`run_id`,`scenario_id`) ON UPDATE restrict ON DELETE restrict
 );
 --> statement-breakpoint
 CREATE UNIQUE INDEX `verifications_execution_uidx` ON `verifications` (`execution_id`);--> statement-breakpoint
+CREATE UNIQUE INDEX `verifications_id_provenance_uidx` ON `verifications` (`verification_id`,`run_id`,`scenario_id`);--> statement-breakpoint
 CREATE TRIGGER `scenarios_identity_immutable`
 BEFORE UPDATE OF `scenario_id` ON `scenarios`
 WHEN NEW.`scenario_id` IS NOT OLD.`scenario_id`
@@ -236,6 +242,13 @@ BEFORE UPDATE ON `scenarios`
 WHEN OLD.`split` = 'holdout'
 BEGIN
   SELECT RAISE(ABORT, 'frozen holdout scenarios are immutable');
+END;
+--> statement-breakpoint
+CREATE TRIGGER `holdout_scenarios_delete_immutable`
+BEFORE DELETE ON `scenarios`
+WHEN OLD.`split` = 'holdout'
+BEGIN
+  SELECT RAISE(ABORT, 'frozen holdout scenarios cannot be deleted');
 END;
 --> statement-breakpoint
 CREATE TRIGGER `runs_provenance_immutable`
@@ -265,13 +278,16 @@ BEGIN
   SELECT RAISE(ABORT, 'record provenance is immutable');
 END;
 --> statement-breakpoint
-CREATE TRIGGER `bids_provenance_immutable`
-BEFORE UPDATE OF `scenario_id`, `run_id`, `lineage` ON `bids`
-WHEN NEW.`scenario_id` IS NOT OLD.`scenario_id`
-  OR NEW.`run_id` IS NOT OLD.`run_id`
-  OR NEW.`lineage` IS NOT OLD.`lineage`
+CREATE TRIGGER `bids_audit_record_immutable`
+BEFORE UPDATE ON `bids`
 BEGIN
-  SELECT RAISE(ABORT, 'record provenance is immutable');
+  SELECT RAISE(ABORT, 'bid audit evidence is immutable');
+END;
+--> statement-breakpoint
+CREATE TRIGGER `bids_audit_record_delete_immutable`
+BEFORE DELETE ON `bids`
+BEGIN
+  SELECT RAISE(ABORT, 'bid audit evidence cannot be deleted');
 END;
 --> statement-breakpoint
 CREATE TRIGGER `market_decisions_provenance_immutable`
@@ -283,22 +299,28 @@ BEGIN
   SELECT RAISE(ABORT, 'record provenance is immutable');
 END;
 --> statement-breakpoint
-CREATE TRIGGER `tool_executions_provenance_immutable`
-BEFORE UPDATE OF `scenario_id`, `run_id`, `lineage` ON `tool_executions`
-WHEN NEW.`scenario_id` IS NOT OLD.`scenario_id`
-  OR NEW.`run_id` IS NOT OLD.`run_id`
-  OR NEW.`lineage` IS NOT OLD.`lineage`
+CREATE TRIGGER `tool_executions_audit_record_immutable`
+BEFORE UPDATE ON `tool_executions`
 BEGIN
-  SELECT RAISE(ABORT, 'record provenance is immutable');
+  SELECT RAISE(ABORT, 'tool execution audit evidence is immutable');
 END;
 --> statement-breakpoint
-CREATE TRIGGER `verifications_provenance_immutable`
-BEFORE UPDATE OF `scenario_id`, `run_id`, `lineage` ON `verifications`
-WHEN NEW.`scenario_id` IS NOT OLD.`scenario_id`
-  OR NEW.`run_id` IS NOT OLD.`run_id`
-  OR NEW.`lineage` IS NOT OLD.`lineage`
+CREATE TRIGGER `tool_executions_audit_record_delete_immutable`
+BEFORE DELETE ON `tool_executions`
 BEGIN
-  SELECT RAISE(ABORT, 'record provenance is immutable');
+  SELECT RAISE(ABORT, 'tool execution audit evidence cannot be deleted');
+END;
+--> statement-breakpoint
+CREATE TRIGGER `verifications_audit_record_immutable`
+BEFORE UPDATE ON `verifications`
+BEGIN
+  SELECT RAISE(ABORT, 'verification audit evidence is immutable');
+END;
+--> statement-breakpoint
+CREATE TRIGGER `verifications_audit_record_delete_immutable`
+BEFORE DELETE ON `verifications`
+BEGIN
+  SELECT RAISE(ABORT, 'verification audit evidence cannot be deleted');
 END;
 --> statement-breakpoint
 CREATE TRIGGER `settlements_provenance_immutable`

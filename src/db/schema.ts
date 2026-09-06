@@ -108,6 +108,11 @@ export const tasks = sqliteTable(
   (table) => [
     runProvenanceForeignKey(table, "tasks_run_provenance_fk"),
     uniqueIndex("tasks_run_uidx").on(table.runId),
+    uniqueIndex("tasks_id_provenance_uidx").on(
+      table.taskId,
+      table.runId,
+      table.scenarioId,
+    ),
   ],
 );
 
@@ -116,12 +121,7 @@ export const contexts = sqliteTable(
   {
     contextId: text("context_id").primaryKey(),
     ...provenanceColumns(),
-    taskId: text("task_id")
-      .notNull()
-      .references(() => tasks.taskId, {
-        onDelete: "restrict",
-        onUpdate: "restrict",
-      }),
+    taskId: text("task_id").notNull(),
     payload: text("payload", { mode: "json" }).$type<StoredJson>().notNull(),
     deterministicTags: text("deterministic_tags", { mode: "json" })
       .$type<readonly string[]>()
@@ -130,6 +130,13 @@ export const contexts = sqliteTable(
   },
   (table) => [
     runProvenanceForeignKey(table, "contexts_run_provenance_fk"),
+    foreignKey({
+      name: "contexts_task_provenance_fk",
+      columns: [table.taskId, table.runId, table.scenarioId],
+      foreignColumns: [tasks.taskId, tasks.runId, tasks.scenarioId],
+    })
+      .onDelete("restrict")
+      .onUpdate("restrict"),
     uniqueIndex("contexts_run_uidx").on(table.runId),
     index("contexts_task_idx").on(table.taskId),
   ],
@@ -164,6 +171,11 @@ export const bids = sqliteTable(
       sql`(${table.valid} = 0) OR (${table.validatedPayload} IS NOT NULL)`,
     ),
     uniqueIndex("bids_run_bidder_uidx").on(table.runId, table.bidderId),
+    uniqueIndex("bids_id_provenance_uidx").on(
+      table.bidId,
+      table.runId,
+      table.scenarioId,
+    ),
   ],
 );
 
@@ -172,12 +184,7 @@ export const marketDecisions = sqliteTable(
   {
     decisionId: text("decision_id").primaryKey(),
     ...provenanceColumns(),
-    selectedBidId: text("selected_bid_id")
-      .notNull()
-      .references(() => bids.bidId, {
-        onDelete: "restrict",
-        onUpdate: "restrict",
-      }),
+    selectedBidId: text("selected_bid_id").notNull(),
     riskPolicy: text("risk_policy", { mode: "json" })
       .$type<StoredJson>()
       .notNull(),
@@ -188,7 +195,19 @@ export const marketDecisions = sqliteTable(
   },
   (table) => [
     runProvenanceForeignKey(table, "market_decisions_run_provenance_fk"),
+    foreignKey({
+      name: "market_decisions_bid_provenance_fk",
+      columns: [table.selectedBidId, table.runId, table.scenarioId],
+      foreignColumns: [bids.bidId, bids.runId, bids.scenarioId],
+    })
+      .onDelete("restrict")
+      .onUpdate("restrict"),
     uniqueIndex("market_decisions_run_uidx").on(table.runId),
+    uniqueIndex("market_decisions_id_provenance_uidx").on(
+      table.decisionId,
+      table.runId,
+      table.scenarioId,
+    ),
     index("market_decisions_selected_bid_idx").on(table.selectedBidId),
   ],
 );
@@ -198,12 +217,7 @@ export const toolExecutions = sqliteTable(
   {
     executionId: text("execution_id").primaryKey(),
     ...provenanceColumns(),
-    decisionId: text("decision_id")
-      .notNull()
-      .references(() => marketDecisions.decisionId, {
-        onDelete: "restrict",
-        onUpdate: "restrict",
-      }),
+    decisionId: text("decision_id").notNull(),
     adapterMode: text("adapter_mode", {
       enum: ["simulator", "live"],
     }).notNull(),
@@ -222,11 +236,27 @@ export const toolExecutions = sqliteTable(
   },
   (table) => [
     runProvenanceForeignKey(table, "tool_executions_run_provenance_fk"),
+    foreignKey({
+      name: "tool_executions_decision_provenance_fk",
+      columns: [table.decisionId, table.runId, table.scenarioId],
+      foreignColumns: [
+        marketDecisions.decisionId,
+        marketDecisions.runId,
+        marketDecisions.scenarioId,
+      ],
+    })
+      .onDelete("restrict")
+      .onUpdate("restrict"),
     check(
       "tool_executions_latency_nonnegative",
       sql`${table.latencyMs} >= 0`,
     ),
     uniqueIndex("tool_executions_decision_uidx").on(table.decisionId),
+    uniqueIndex("tool_executions_id_provenance_uidx").on(
+      table.executionId,
+      table.runId,
+      table.scenarioId,
+    ),
   ],
 );
 
@@ -235,12 +265,7 @@ export const verifications = sqliteTable(
   {
     verificationId: text("verification_id").primaryKey(),
     ...provenanceColumns(),
-    executionId: text("execution_id")
-      .notNull()
-      .references(() => toolExecutions.executionId, {
-        onDelete: "restrict",
-        onUpdate: "restrict",
-      }),
+    executionId: text("execution_id").notNull(),
     passed: integer("passed", { mode: "boolean" }).notNull(),
     requiredPostconditions: text("required_postconditions", { mode: "json" })
       .$type<readonly StoredJson[]>()
@@ -255,7 +280,23 @@ export const verifications = sqliteTable(
   },
   (table) => [
     runProvenanceForeignKey(table, "verifications_run_provenance_fk"),
+    foreignKey({
+      name: "verifications_execution_provenance_fk",
+      columns: [table.executionId, table.runId, table.scenarioId],
+      foreignColumns: [
+        toolExecutions.executionId,
+        toolExecutions.runId,
+        toolExecutions.scenarioId,
+      ],
+    })
+      .onDelete("restrict")
+      .onUpdate("restrict"),
     uniqueIndex("verifications_execution_uidx").on(table.executionId),
+    uniqueIndex("verifications_id_provenance_uidx").on(
+      table.verificationId,
+      table.runId,
+      table.scenarioId,
+    ),
   ],
 );
 
@@ -264,18 +305,8 @@ export const settlements = sqliteTable(
   {
     settlementId: text("settlement_id").primaryKey(),
     ...provenanceColumns(),
-    selectedBidId: text("selected_bid_id")
-      .notNull()
-      .references(() => bids.bidId, {
-        onDelete: "restrict",
-        onUpdate: "restrict",
-      }),
-    verificationId: text("verification_id")
-      .notNull()
-      .references(() => verifications.verificationId, {
-        onDelete: "restrict",
-        onUpdate: "restrict",
-      }),
+    selectedBidId: text("selected_bid_id").notNull(),
+    verificationId: text("verification_id").notNull(),
     predictedProbability: real("predicted_probability").notNull(),
     outcome: integer("outcome").notNull(),
     brierLoss: real("brier_loss").notNull(),
@@ -285,6 +316,24 @@ export const settlements = sqliteTable(
   },
   (table) => [
     runProvenanceForeignKey(table, "settlements_run_provenance_fk"),
+    foreignKey({
+      name: "settlements_bid_provenance_fk",
+      columns: [table.selectedBidId, table.runId, table.scenarioId],
+      foreignColumns: [bids.bidId, bids.runId, bids.scenarioId],
+    })
+      .onDelete("restrict")
+      .onUpdate("restrict"),
+    foreignKey({
+      name: "settlements_verification_provenance_fk",
+      columns: [table.verificationId, table.runId, table.scenarioId],
+      foreignColumns: [
+        verifications.verificationId,
+        verifications.runId,
+        verifications.scenarioId,
+      ],
+    })
+      .onDelete("restrict")
+      .onUpdate("restrict"),
     check(
       "settlements_probability_range",
       sql`${table.predictedProbability} >= 0.01 AND ${table.predictedProbability} <= 0.99`,
@@ -300,6 +349,11 @@ export const settlements = sqliteTable(
     ),
     uniqueIndex("settlements_run_uidx").on(table.runId),
     uniqueIndex("settlements_verification_uidx").on(table.verificationId),
+    uniqueIndex("settlements_id_provenance_uidx").on(
+      table.settlementId,
+      table.runId,
+      table.scenarioId,
+    ),
   ],
 );
 
@@ -308,12 +362,7 @@ export const reputationBuckets = sqliteTable(
   {
     reputationBucketId: text("reputation_bucket_id").primaryKey(),
     ...provenanceColumns(),
-    settlementId: text("settlement_id")
-      .notNull()
-      .references(() => settlements.settlementId, {
-        onDelete: "restrict",
-        onUpdate: "restrict",
-      }),
+    settlementId: text("settlement_id").notNull(),
     bidderId: text("bidder_id", {
       enum: ["sprinter", "inspector", "skeptic"],
     }).notNull(),
@@ -323,11 +372,21 @@ export const reputationBuckets = sqliteTable(
     bucketKey: text("bucket_key").notNull(),
     score: real("score").notNull(),
     sampleCount: integer("sample_count").notNull(),
-    previousBucketId: text("previous_bucket_id"),
     createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
   },
   (table) => [
     runProvenanceForeignKey(table, "reputation_buckets_run_provenance_fk"),
+    foreignKey({
+      name: "reputation_buckets_settlement_provenance_fk",
+      columns: [table.settlementId, table.runId, table.scenarioId],
+      foreignColumns: [
+        settlements.settlementId,
+        settlements.runId,
+        settlements.scenarioId,
+      ],
+    })
+      .onDelete("restrict")
+      .onUpdate("restrict"),
     check(
       "reputation_buckets_score_range",
       sql`${table.score} >= 0 AND ${table.score} <= 1`,
@@ -351,12 +410,7 @@ export const bankrollEvents = sqliteTable(
   {
     bankrollEventId: text("bankroll_event_id").primaryKey(),
     ...provenanceColumns(),
-    settlementId: text("settlement_id")
-      .notNull()
-      .references(() => settlements.settlementId, {
-        onDelete: "restrict",
-        onUpdate: "restrict",
-      }),
+    settlementId: text("settlement_id").notNull(),
     bidderId: text("bidder_id", {
       enum: ["sprinter", "inspector", "skeptic"],
     }).notNull(),
@@ -368,6 +422,17 @@ export const bankrollEvents = sqliteTable(
   },
   (table) => [
     runProvenanceForeignKey(table, "bankroll_events_run_provenance_fk"),
+    foreignKey({
+      name: "bankroll_events_settlement_provenance_fk",
+      columns: [table.settlementId, table.runId, table.scenarioId],
+      foreignColumns: [
+        settlements.settlementId,
+        settlements.runId,
+        settlements.scenarioId,
+      ],
+    })
+      .onDelete("restrict")
+      .onUpdate("restrict"),
     check("bankroll_events_stake_nonnegative", sql`${table.stake} >= 0`),
     check(
       "bankroll_events_brier_score_range",
@@ -404,6 +469,11 @@ export const benchmarkRuns = sqliteTable(
   },
   (table) => [
     runProvenanceForeignKey(table, "benchmark_runs_run_provenance_fk"),
+    uniqueIndex("benchmark_runs_id_provenance_uidx").on(
+      table.benchmarkRunId,
+      table.runId,
+      table.scenarioId,
+    ),
     index("benchmark_runs_manifest_condition_idx").on(
       table.manifestDigest,
       table.condition,
@@ -416,12 +486,7 @@ export const benchmarkMetrics = sqliteTable(
   {
     benchmarkMetricId: text("benchmark_metric_id").primaryKey(),
     ...provenanceColumns(),
-    benchmarkRunId: text("benchmark_run_id")
-      .notNull()
-      .references(() => benchmarkRuns.benchmarkRunId, {
-        onDelete: "restrict",
-        onUpdate: "restrict",
-      }),
+    benchmarkRunId: text("benchmark_run_id").notNull(),
     metric: text("metric", {
       enum: [
         "completion_rate",
@@ -445,6 +510,17 @@ export const benchmarkMetrics = sqliteTable(
   },
   (table) => [
     runProvenanceForeignKey(table, "benchmark_metrics_run_provenance_fk"),
+    foreignKey({
+      name: "benchmark_metrics_benchmark_run_provenance_fk",
+      columns: [table.benchmarkRunId, table.runId, table.scenarioId],
+      foreignColumns: [
+        benchmarkRuns.benchmarkRunId,
+        benchmarkRuns.runId,
+        benchmarkRuns.scenarioId,
+      ],
+    })
+      .onDelete("restrict")
+      .onUpdate("restrict"),
     check(
       "benchmark_metrics_sample_size_positive",
       sql`${table.sampleSize} > 0`,
