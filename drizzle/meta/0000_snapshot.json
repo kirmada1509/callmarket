@@ -1,21 +1,42 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "2c19de99-aa3f-478a-b5dd-2da5ff501552",
+  "id": "870e80af-0d7b-4029-9d43-31965269c2e6",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
-    "bids": {
-      "name": "bids",
+    "bankroll_events": {
+      "name": "bankroll_events",
       "columns": {
-        "id": {
-          "name": "id",
+        "bankroll_event_id": {
+          "name": "bankroll_event_id",
           "type": "text",
           "primaryKey": true,
           "notNull": true,
           "autoincrement": false
         },
+        "scenario_id": {
+          "name": "scenario_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
         "run_id": {
           "name": "run_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "lineage": {
+          "name": "lineage",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "settlement_id": {
+          "name": "settlement_id",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
@@ -28,16 +49,396 @@
           "notNull": true,
           "autoincrement": false
         },
-        "payload": {
-          "name": "payload",
+        "stake": {
+          "name": "stake",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "brier_score": {
+          "name": "brier_score",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "delta": {
+          "name": "delta",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "balance_after": {
+          "name": "balance_after",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "bankroll_events_bidder_time_idx": {
+          "name": "bankroll_events_bidder_time_idx",
+          "columns": [
+            "bidder_id",
+            "created_at"
+          ],
+          "isUnique": false
+        },
+        "bankroll_events_settlement_idx": {
+          "name": "bankroll_events_settlement_idx",
+          "columns": [
+            "settlement_id"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "bankroll_events_settlement_id_settlements_settlement_id_fk": {
+          "name": "bankroll_events_settlement_id_settlements_settlement_id_fk",
+          "tableFrom": "bankroll_events",
+          "tableTo": "settlements",
+          "columnsFrom": [
+            "settlement_id"
+          ],
+          "columnsTo": [
+            "settlement_id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "restrict"
+        },
+        "bankroll_events_run_provenance_fk": {
+          "name": "bankroll_events_run_provenance_fk",
+          "tableFrom": "bankroll_events",
+          "tableTo": "runs",
+          "columnsFrom": [
+            "run_id",
+            "scenario_id"
+          ],
+          "columnsTo": [
+            "run_id",
+            "scenario_id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "restrict"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "bankroll_events_stake_nonnegative": {
+          "name": "bankroll_events_stake_nonnegative",
+          "value": "\"bankroll_events\".\"stake\" >= 0"
+        },
+        "bankroll_events_brier_score_range": {
+          "name": "bankroll_events_brier_score_range",
+          "value": "\"bankroll_events\".\"brier_score\" >= 0 AND \"bankroll_events\".\"brier_score\" <= 1"
+        }
+      }
+    },
+    "benchmark_metrics": {
+      "name": "benchmark_metrics",
+      "columns": {
+        "benchmark_metric_id": {
+          "name": "benchmark_metric_id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "scenario_id": {
+          "name": "scenario_id",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
         },
+        "run_id": {
+          "name": "run_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "lineage": {
+          "name": "lineage",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "benchmark_run_id": {
+          "name": "benchmark_run_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "metric": {
+          "name": "metric",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "value": {
+          "name": "value",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "sample_size": {
+          "name": "sample_size",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "confidence_low": {
+          "name": "confidence_low",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "confidence_high": {
+          "name": "confidence_high",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "calculated_at": {
+          "name": "calculated_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "benchmark_metrics_run_metric_uidx": {
+          "name": "benchmark_metrics_run_metric_uidx",
+          "columns": [
+            "benchmark_run_id",
+            "metric"
+          ],
+          "isUnique": true
+        }
+      },
+      "foreignKeys": {
+        "benchmark_metrics_benchmark_run_id_benchmark_runs_benchmark_run_id_fk": {
+          "name": "benchmark_metrics_benchmark_run_id_benchmark_runs_benchmark_run_id_fk",
+          "tableFrom": "benchmark_metrics",
+          "tableTo": "benchmark_runs",
+          "columnsFrom": [
+            "benchmark_run_id"
+          ],
+          "columnsTo": [
+            "benchmark_run_id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "restrict"
+        },
+        "benchmark_metrics_run_provenance_fk": {
+          "name": "benchmark_metrics_run_provenance_fk",
+          "tableFrom": "benchmark_metrics",
+          "tableTo": "runs",
+          "columnsFrom": [
+            "run_id",
+            "scenario_id"
+          ],
+          "columnsTo": [
+            "run_id",
+            "scenario_id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "restrict"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "benchmark_metrics_sample_size_positive": {
+          "name": "benchmark_metrics_sample_size_positive",
+          "value": "\"benchmark_metrics\".\"sample_size\" > 0"
+        },
+        "benchmark_metrics_confidence_order": {
+          "name": "benchmark_metrics_confidence_order",
+          "value": "\"benchmark_metrics\".\"confidence_low\" IS NULL OR \"benchmark_metrics\".\"confidence_high\" IS NULL OR \"benchmark_metrics\".\"confidence_low\" <= \"benchmark_metrics\".\"confidence_high\""
+        }
+      }
+    },
+    "benchmark_runs": {
+      "name": "benchmark_runs",
+      "columns": {
+        "benchmark_run_id": {
+          "name": "benchmark_run_id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "scenario_id": {
+          "name": "scenario_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "run_id": {
+          "name": "run_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "lineage": {
+          "name": "lineage",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "manifest_digest": {
+          "name": "manifest_digest",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "condition": {
+          "name": "condition",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "status": {
+          "name": "status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "started_at": {
+          "name": "started_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "completed_at": {
+          "name": "completed_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "benchmark_runs_manifest_condition_idx": {
+          "name": "benchmark_runs_manifest_condition_idx",
+          "columns": [
+            "manifest_digest",
+            "condition"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "benchmark_runs_run_provenance_fk": {
+          "name": "benchmark_runs_run_provenance_fk",
+          "tableFrom": "benchmark_runs",
+          "tableTo": "runs",
+          "columnsFrom": [
+            "run_id",
+            "scenario_id"
+          ],
+          "columnsTo": [
+            "run_id",
+            "scenario_id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "restrict"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "bids": {
+      "name": "bids",
+      "columns": {
+        "bid_id": {
+          "name": "bid_id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "scenario_id": {
+          "name": "scenario_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "run_id": {
+          "name": "run_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "lineage": {
+          "name": "lineage",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "bidder_id": {
+          "name": "bidder_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "raw_output": {
+          "name": "raw_output",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "validated_payload": {
+          "name": "validated_payload",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
         "valid": {
           "name": "valid",
           "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "validation_issues": {
+          "name": "validation_issues",
+          "type": "text",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
@@ -55,22 +456,273 @@
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
         }
       },
-      "indexes": {},
+      "indexes": {
+        "bids_run_bidder_uidx": {
+          "name": "bids_run_bidder_uidx",
+          "columns": [
+            "run_id",
+            "bidder_id"
+          ],
+          "isUnique": true
+        }
+      },
       "foreignKeys": {
-        "bids_run_id_runs_id_fk": {
-          "name": "bids_run_id_runs_id_fk",
+        "bids_run_provenance_fk": {
+          "name": "bids_run_provenance_fk",
           "tableFrom": "bids",
           "tableTo": "runs",
           "columnsFrom": [
-            "run_id"
+            "run_id",
+            "scenario_id"
           ],
           "columnsTo": [
-            "id"
+            "run_id",
+            "scenario_id"
           ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onDelete": "restrict",
+          "onUpdate": "restrict"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "bids_tokens_nonnegative": {
+          "name": "bids_tokens_nonnegative",
+          "value": "\"bids\".\"tokens\" >= 0"
+        },
+        "bids_latency_nonnegative": {
+          "name": "bids_latency_nonnegative",
+          "value": "\"bids\".\"latency_ms\" >= 0"
+        },
+        "valid_bids_have_payload": {
+          "name": "valid_bids_have_payload",
+          "value": "(\"bids\".\"valid\" = 0) OR (\"bids\".\"validated_payload\" IS NOT NULL)"
+        }
+      }
+    },
+    "contexts": {
+      "name": "contexts",
+      "columns": {
+        "context_id": {
+          "name": "context_id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "scenario_id": {
+          "name": "scenario_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "run_id": {
+          "name": "run_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "lineage": {
+          "name": "lineage",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "task_id": {
+          "name": "task_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "payload": {
+          "name": "payload",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "deterministic_tags": {
+          "name": "deterministic_tags",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "contexts_run_uidx": {
+          "name": "contexts_run_uidx",
+          "columns": [
+            "run_id"
+          ],
+          "isUnique": true
+        },
+        "contexts_task_idx": {
+          "name": "contexts_task_idx",
+          "columns": [
+            "task_id"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "contexts_task_id_tasks_task_id_fk": {
+          "name": "contexts_task_id_tasks_task_id_fk",
+          "tableFrom": "contexts",
+          "tableTo": "tasks",
+          "columnsFrom": [
+            "task_id"
+          ],
+          "columnsTo": [
+            "task_id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "restrict"
+        },
+        "contexts_run_provenance_fk": {
+          "name": "contexts_run_provenance_fk",
+          "tableFrom": "contexts",
+          "tableTo": "runs",
+          "columnsFrom": [
+            "run_id",
+            "scenario_id"
+          ],
+          "columnsTo": [
+            "run_id",
+            "scenario_id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "restrict"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "market_decisions": {
+      "name": "market_decisions",
+      "columns": {
+        "decision_id": {
+          "name": "decision_id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "scenario_id": {
+          "name": "scenario_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "run_id": {
+          "name": "run_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "lineage": {
+          "name": "lineage",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "selected_bid_id": {
+          "name": "selected_bid_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "risk_policy": {
+          "name": "risk_policy",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "score_breakdown": {
+          "name": "score_breakdown",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "decided_at": {
+          "name": "decided_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "market_decisions_run_uidx": {
+          "name": "market_decisions_run_uidx",
+          "columns": [
+            "run_id"
+          ],
+          "isUnique": true
+        },
+        "market_decisions_selected_bid_idx": {
+          "name": "market_decisions_selected_bid_idx",
+          "columns": [
+            "selected_bid_id"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "market_decisions_selected_bid_id_bids_bid_id_fk": {
+          "name": "market_decisions_selected_bid_id_bids_bid_id_fk",
+          "tableFrom": "market_decisions",
+          "tableTo": "bids",
+          "columnsFrom": [
+            "selected_bid_id"
+          ],
+          "columnsTo": [
+            "bid_id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "restrict"
+        },
+        "market_decisions_run_provenance_fk": {
+          "name": "market_decisions_run_provenance_fk",
+          "tableFrom": "market_decisions",
+          "tableTo": "runs",
+          "columnsFrom": [
+            "run_id",
+            "scenario_id"
+          ],
+          "columnsTo": [
+            "run_id",
+            "scenario_id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "restrict"
         }
       },
       "compositePrimaryKeys": {},
@@ -80,10 +732,38 @@
     "reputation_buckets": {
       "name": "reputation_buckets",
       "columns": {
-        "id": {
-          "name": "id",
+        "reputation_bucket_id": {
+          "name": "reputation_bucket_id",
           "type": "text",
           "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "scenario_id": {
+          "name": "scenario_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "run_id": {
+          "name": "run_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "lineage": {
+          "name": "lineage",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "settlement_id": {
+          "name": "settlement_id",
+          "type": "text",
+          "primaryKey": false,
           "notNull": true,
           "autoincrement": false
         },
@@ -122,25 +802,88 @@
           "notNull": true,
           "autoincrement": false
         },
-        "updated_at": {
-          "name": "updated_at",
+        "previous_bucket_id": {
+          "name": "previous_bucket_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "created_at": {
+          "name": "created_at",
           "type": "integer",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
         }
       },
-      "indexes": {},
-      "foreignKeys": {},
+      "indexes": {
+        "reputation_buckets_lookup_idx": {
+          "name": "reputation_buckets_lookup_idx",
+          "columns": [
+            "bidder_id",
+            "level",
+            "bucket_key",
+            "created_at"
+          ],
+          "isUnique": false
+        },
+        "reputation_buckets_settlement_idx": {
+          "name": "reputation_buckets_settlement_idx",
+          "columns": [
+            "settlement_id"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "reputation_buckets_settlement_id_settlements_settlement_id_fk": {
+          "name": "reputation_buckets_settlement_id_settlements_settlement_id_fk",
+          "tableFrom": "reputation_buckets",
+          "tableTo": "settlements",
+          "columnsFrom": [
+            "settlement_id"
+          ],
+          "columnsTo": [
+            "settlement_id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "restrict"
+        },
+        "reputation_buckets_run_provenance_fk": {
+          "name": "reputation_buckets_run_provenance_fk",
+          "tableFrom": "reputation_buckets",
+          "tableTo": "runs",
+          "columnsFrom": [
+            "run_id",
+            "scenario_id"
+          ],
+          "columnsTo": [
+            "run_id",
+            "scenario_id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "restrict"
+        }
+      },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
-      "checkConstraints": {}
+      "checkConstraints": {
+        "reputation_buckets_score_range": {
+          "name": "reputation_buckets_score_range",
+          "value": "\"reputation_buckets\".\"score\" >= 0 AND \"reputation_buckets\".\"score\" <= 1"
+        },
+        "reputation_buckets_samples_positive": {
+          "name": "reputation_buckets_samples_positive",
+          "value": "\"reputation_buckets\".\"sample_count\" > 0"
+        }
+      }
     },
     "runs": {
       "name": "runs",
       "columns": {
-        "id": {
-          "name": "id",
+        "run_id": {
+          "name": "run_id",
           "type": "text",
           "primaryKey": true,
           "notNull": true,
@@ -148,6 +891,13 @@
         },
         "scenario_id": {
           "name": "scenario_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "lineage": {
+          "name": "lineage",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
@@ -167,6 +917,13 @@
           "notNull": true,
           "autoincrement": false
         },
+        "status": {
+          "name": "status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
         "started_at": {
           "name": "started_at",
           "type": "integer",
@@ -182,31 +939,52 @@
           "autoincrement": false
         }
       },
-      "indexes": {},
+      "indexes": {
+        "runs_run_scenario_uidx": {
+          "name": "runs_run_scenario_uidx",
+          "columns": [
+            "run_id",
+            "scenario_id"
+          ],
+          "isUnique": true
+        },
+        "runs_scenario_idx": {
+          "name": "runs_scenario_idx",
+          "columns": [
+            "scenario_id"
+          ],
+          "isUnique": false
+        }
+      },
       "foreignKeys": {
-        "runs_scenario_id_scenarios_id_fk": {
-          "name": "runs_scenario_id_scenarios_id_fk",
+        "runs_scenario_id_scenarios_scenario_id_fk": {
+          "name": "runs_scenario_id_scenarios_scenario_id_fk",
           "tableFrom": "runs",
           "tableTo": "scenarios",
           "columnsFrom": [
             "scenario_id"
           ],
           "columnsTo": [
-            "id"
+            "scenario_id"
           ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onDelete": "restrict",
+          "onUpdate": "restrict"
         }
       },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
-      "checkConstraints": {}
+      "checkConstraints": {
+        "runs_seed_nonnegative": {
+          "name": "runs_seed_nonnegative",
+          "value": "\"runs\".\"seed\" >= 0"
+        }
+      }
     },
     "scenarios": {
       "name": "scenarios",
       "columns": {
-        "id": {
-          "name": "id",
+        "scenario_id": {
+          "name": "scenario_id",
           "type": "text",
           "primaryKey": true,
           "notNull": true,
@@ -226,6 +1004,20 @@
           "notNull": true,
           "autoincrement": false
         },
+        "generator_version": {
+          "name": "generator_version",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "seed": {
+          "name": "seed",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
         "fixture": {
           "name": "fixture",
           "type": "text",
@@ -239,21 +1031,53 @@
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
         }
       },
-      "indexes": {},
+      "indexes": {
+        "scenarios_domain_split_idx": {
+          "name": "scenarios_domain_split_idx",
+          "columns": [
+            "domain",
+            "split"
+          ],
+          "isUnique": false
+        }
+      },
       "foreignKeys": {},
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
-      "checkConstraints": {}
+      "checkConstraints": {
+        "scenarios_seed_nonnegative": {
+          "name": "scenarios_seed_nonnegative",
+          "value": "\"scenarios\".\"seed\" >= 0"
+        },
+        "holdout_scenarios_are_frozen": {
+          "name": "holdout_scenarios_are_frozen",
+          "value": "\"scenarios\".\"split\" <> 'holdout' OR \"scenarios\".\"frozen_at\" IS NOT NULL"
+        }
+      }
     },
     "settlements": {
       "name": "settlements",
       "columns": {
-        "id": {
-          "name": "id",
+        "settlement_id": {
+          "name": "settlement_id",
           "type": "text",
           "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "scenario_id": {
+          "name": "scenario_id",
+          "type": "text",
+          "primaryKey": false,
           "notNull": true,
           "autoincrement": false
         },
@@ -264,16 +1088,44 @@
           "notNull": true,
           "autoincrement": false
         },
+        "lineage": {
+          "name": "lineage",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
         "selected_bid_id": {
           "name": "selected_bid_id",
           "type": "text",
           "primaryKey": false,
-          "notNull": false,
+          "notNull": true,
           "autoincrement": false
         },
-        "verified": {
-          "name": "verified",
+        "verification_id": {
+          "name": "verification_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "predicted_probability": {
+          "name": "predicted_probability",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "outcome": {
+          "name": "outcome",
           "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "brier_loss": {
+          "name": "brier_loss",
+          "type": "real",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
@@ -292,13 +1144,6 @@
           "notNull": true,
           "autoincrement": false
         },
-        "evidence": {
-          "name": "evidence",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
         "settled_at": {
           "name": "settled_at",
           "type": "integer",
@@ -307,33 +1152,430 @@
           "autoincrement": false
         }
       },
-      "indexes": {},
-      "foreignKeys": {
-        "settlements_run_id_runs_id_fk": {
-          "name": "settlements_run_id_runs_id_fk",
-          "tableFrom": "settlements",
-          "tableTo": "runs",
-          "columnsFrom": [
+      "indexes": {
+        "settlements_run_uidx": {
+          "name": "settlements_run_uidx",
+          "columns": [
             "run_id"
           ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "isUnique": true
         },
-        "settlements_selected_bid_id_bids_id_fk": {
-          "name": "settlements_selected_bid_id_bids_id_fk",
+        "settlements_verification_uidx": {
+          "name": "settlements_verification_uidx",
+          "columns": [
+            "verification_id"
+          ],
+          "isUnique": true
+        }
+      },
+      "foreignKeys": {
+        "settlements_selected_bid_id_bids_bid_id_fk": {
+          "name": "settlements_selected_bid_id_bids_bid_id_fk",
           "tableFrom": "settlements",
           "tableTo": "bids",
           "columnsFrom": [
             "selected_bid_id"
           ],
           "columnsTo": [
-            "id"
+            "bid_id"
           ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onDelete": "restrict",
+          "onUpdate": "restrict"
+        },
+        "settlements_verification_id_verifications_verification_id_fk": {
+          "name": "settlements_verification_id_verifications_verification_id_fk",
+          "tableFrom": "settlements",
+          "tableTo": "verifications",
+          "columnsFrom": [
+            "verification_id"
+          ],
+          "columnsTo": [
+            "verification_id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "restrict"
+        },
+        "settlements_run_provenance_fk": {
+          "name": "settlements_run_provenance_fk",
+          "tableFrom": "settlements",
+          "tableTo": "runs",
+          "columnsFrom": [
+            "run_id",
+            "scenario_id"
+          ],
+          "columnsTo": [
+            "run_id",
+            "scenario_id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "restrict"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "settlements_probability_range": {
+          "name": "settlements_probability_range",
+          "value": "\"settlements\".\"predicted_probability\" >= 0.01 AND \"settlements\".\"predicted_probability\" <= 0.99"
+        },
+        "settlements_binary_outcome": {
+          "name": "settlements_binary_outcome",
+          "value": "\"settlements\".\"outcome\" IN (0, 1)"
+        },
+        "settlements_brier_loss_range": {
+          "name": "settlements_brier_loss_range",
+          "value": "\"settlements\".\"brier_loss\" >= 0 AND \"settlements\".\"brier_loss\" <= 1"
+        },
+        "settlements_brier_score_range": {
+          "name": "settlements_brier_score_range",
+          "value": "\"settlements\".\"brier_score\" >= 0 AND \"settlements\".\"brier_score\" <= 1"
+        }
+      }
+    },
+    "tasks": {
+      "name": "tasks",
+      "columns": {
+        "task_id": {
+          "name": "task_id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "scenario_id": {
+          "name": "scenario_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "run_id": {
+          "name": "run_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "lineage": {
+          "name": "lineage",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "request": {
+          "name": "request",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "payload": {
+          "name": "payload",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "tasks_run_uidx": {
+          "name": "tasks_run_uidx",
+          "columns": [
+            "run_id"
+          ],
+          "isUnique": true
+        }
+      },
+      "foreignKeys": {
+        "tasks_run_provenance_fk": {
+          "name": "tasks_run_provenance_fk",
+          "tableFrom": "tasks",
+          "tableTo": "runs",
+          "columnsFrom": [
+            "run_id",
+            "scenario_id"
+          ],
+          "columnsTo": [
+            "run_id",
+            "scenario_id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "restrict"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "tool_executions": {
+      "name": "tool_executions",
+      "columns": {
+        "execution_id": {
+          "name": "execution_id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "scenario_id": {
+          "name": "scenario_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "run_id": {
+          "name": "run_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "lineage": {
+          "name": "lineage",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "decision_id": {
+          "name": "decision_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "adapter_mode": {
+          "name": "adapter_mode",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "domain": {
+          "name": "domain",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "operation": {
+          "name": "operation",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "request": {
+          "name": "request",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "raw_evidence": {
+          "name": "raw_evidence",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "status": {
+          "name": "status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "latency_ms": {
+          "name": "latency_ms",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "error": {
+          "name": "error",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "executed_at": {
+          "name": "executed_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "tool_executions_decision_uidx": {
+          "name": "tool_executions_decision_uidx",
+          "columns": [
+            "decision_id"
+          ],
+          "isUnique": true
+        }
+      },
+      "foreignKeys": {
+        "tool_executions_decision_id_market_decisions_decision_id_fk": {
+          "name": "tool_executions_decision_id_market_decisions_decision_id_fk",
+          "tableFrom": "tool_executions",
+          "tableTo": "market_decisions",
+          "columnsFrom": [
+            "decision_id"
+          ],
+          "columnsTo": [
+            "decision_id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "restrict"
+        },
+        "tool_executions_run_provenance_fk": {
+          "name": "tool_executions_run_provenance_fk",
+          "tableFrom": "tool_executions",
+          "tableTo": "runs",
+          "columnsFrom": [
+            "run_id",
+            "scenario_id"
+          ],
+          "columnsTo": [
+            "run_id",
+            "scenario_id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "restrict"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "tool_executions_latency_nonnegative": {
+          "name": "tool_executions_latency_nonnegative",
+          "value": "\"tool_executions\".\"latency_ms\" >= 0"
+        }
+      }
+    },
+    "verifications": {
+      "name": "verifications",
+      "columns": {
+        "verification_id": {
+          "name": "verification_id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "scenario_id": {
+          "name": "scenario_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "run_id": {
+          "name": "run_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "lineage": {
+          "name": "lineage",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "execution_id": {
+          "name": "execution_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "passed": {
+          "name": "passed",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "required_postconditions": {
+          "name": "required_postconditions",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "raw_evidence": {
+          "name": "raw_evidence",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "policy_violations": {
+          "name": "policy_violations",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "verified_at": {
+          "name": "verified_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "verifications_execution_uidx": {
+          "name": "verifications_execution_uidx",
+          "columns": [
+            "execution_id"
+          ],
+          "isUnique": true
+        }
+      },
+      "foreignKeys": {
+        "verifications_execution_id_tool_executions_execution_id_fk": {
+          "name": "verifications_execution_id_tool_executions_execution_id_fk",
+          "tableFrom": "verifications",
+          "tableTo": "tool_executions",
+          "columnsFrom": [
+            "execution_id"
+          ],
+          "columnsTo": [
+            "execution_id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "restrict"
+        },
+        "verifications_run_provenance_fk": {
+          "name": "verifications_run_provenance_fk",
+          "tableFrom": "verifications",
+          "tableTo": "runs",
+          "columnsFrom": [
+            "run_id",
+            "scenario_id"
+          ],
+          "columnsTo": [
+            "run_id",
+            "scenario_id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "restrict"
         }
       },
       "compositePrimaryKeys": {},
